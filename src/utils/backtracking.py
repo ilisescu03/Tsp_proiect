@@ -5,10 +5,132 @@ Implementare structurata (fara variabile globale) conform cerintelor din laborat
 
 from __future__ import annotations
 
-from typing import List, Sequence, Tuple
+import time
+from typing import List, Literal, Sequence, Tuple
 
 
 Matrix = List[List[int]]
+
+ModOprire = Literal["prima", "toate", "timp", "y_solutii"]
+
+
+def _cost_tur(traseu: Sequence[int], matrice: Matrix) -> int:
+	"""Calculeaza costul turului, incluzand revenirea la orasul de start."""
+	if not traseu:
+		return 0
+	cost = 0
+	for i in range(len(traseu) - 1):
+		cost += matrice[traseu[i]][traseu[i + 1]]
+	cost += matrice[traseu[-1]][traseu[0]]
+	return cost
+
+
+def rezolva_tsp_backtracking_extins(
+	n: int,
+	matrice: Matrix,
+	*,
+	mod: ModOprire = "toate",
+	timp_max: float | None = None,
+	y_max: int | None = None,
+) -> Tuple[List[int], int, int, float]:
+	"""Rezolva TSP prin backtracking cu moduri configurabile de oprire.
+
+	Moduri:
+		- prima: se opreste la primul tur complet gasit
+		- toate: exploreaza exhaustiv cu prunere branch-and-bound (optim garantat)
+		- timp: se opreste dupa cel mult `timp_max` secunde (returneaza cel mai bun tur gasit)
+		- y_solutii: se opreste dupa gasirea a `y_max` tururi complete (returneaza cel mai bun)
+
+	Args:
+		n: Numarul de orase.
+		matrice: Matricea de distante NxN (simetrica, diagonala 0).
+		mod: Modul de oprire.
+		timp_max: Limita de timp in secunde (doar pentru mod="timp").
+		y_max: Numar maxim de solutii complete (doar pentru mod="y_solutii").
+
+	Returns:
+		(traseu, cost, nr_solutii_gasite, durata_secunde)
+
+	Raises:
+		ValueError: Daca parametrii sunt invalizi.
+	"""
+	if n <= 0:
+		raise ValueError("n trebuie sa fie > 0")
+	if len(matrice) != n or any(len(row) != n for row in matrice):
+		raise ValueError("matrice trebuie sa fie NxN")
+	if mod not in ("prima", "toate", "timp", "y_solutii"):
+		raise ValueError("mod invalid")
+	if mod == "timp":
+		if timp_max is None or timp_max <= 0:
+			raise ValueError("timp_max trebuie sa fie > 0 pentru mod='timp'")
+	if mod == "y_solutii":
+		if y_max is None or y_max <= 0:
+			raise ValueError("y_max trebuie sa fie > 0 pentru mod='y_solutii'")
+
+	start_time = time.perf_counter()
+	deadline = (start_time + float(timp_max)) if mod == "timp" and timp_max is not None else None
+
+	if n == 1:
+		duration = time.perf_counter() - start_time
+		return [0], 0, 1, duration
+
+	# Bound initial (un tur valid rapid) pentru a avea mereu o solutie completa.
+	traseu_initial = list(range(n))
+	best_cost = [_cost_tur(traseu_initial, matrice)]
+	best_route: List[int] = traseu_initial.copy()
+
+	visited = [False] * n
+	visited[0] = True
+	route = [0]
+
+	nr_solutii = [0]
+	oprire = [False]
+
+	def timp_expirat() -> bool:
+		return deadline is not None and time.perf_counter() >= deadline
+
+	def backtrack(current_city: int, current_cost: int) -> None:
+		if oprire[0]:
+			return
+		if deadline is not None and timp_expirat():
+			oprire[0] = True
+			return
+
+		if len(route) == n:
+			nr_solutii[0] += 1
+			total_cost = current_cost + matrice[current_city][0]
+			if total_cost < best_cost[0]:
+				best_cost[0] = total_cost
+				best_route.clear()
+				best_route.extend(route)
+			if mod == "prima":
+				oprire[0] = True
+				return
+			if mod == "y_solutii" and y_max is not None and nr_solutii[0] >= y_max:
+				oprire[0] = True
+				return
+			return
+
+		for next_city in range(1, n):
+			if visited[next_city]:
+				continue
+
+			new_cost = current_cost + matrice[current_city][next_city]
+			if new_cost >= best_cost[0]:
+				continue
+
+			visited[next_city] = True
+			route.append(next_city)
+			backtrack(next_city, new_cost)
+			route.pop()
+			visited[next_city] = False
+
+			if oprire[0]:
+				return
+
+	backtrack(0, 0)
+	duration = time.perf_counter() - start_time
+	return best_route, int(best_cost[0]), int(nr_solutii[0]), duration
 
 
 def rezolva_tsp_backtracking(n: int, matrice: Matrix) -> Tuple[List[int], int]:
@@ -29,43 +151,5 @@ def rezolva_tsp_backtracking(n: int, matrice: Matrix) -> Tuple[List[int], int]:
 	Raises:
 		ValueError: Daca n este invalid sau matricea nu are dimensiunea corecta.
 	"""
-	if n <= 0:
-		raise ValueError("n trebuie sa fie > 0")
-	if len(matrice) != n or any(len(row) != n for row in matrice):
-		raise ValueError("matrice trebuie sa fie NxN")
-
-	if n == 1:
-		return [0], 0
-
-	best_cost = [float("inf")]
-	best_route: List[int] = []
-
-	visited = [False] * n
-	visited[0] = True
-	route = [0]
-
-	def backtrack(current_city: int, current_cost: int) -> None:
-		if len(route) == n:
-			total_cost = current_cost + matrice[current_city][0]
-			if total_cost < best_cost[0]:
-				best_cost[0] = total_cost
-				best_route.clear()
-				best_route.extend(route)
-			return
-
-		for next_city in range(n):
-			if visited[next_city]:
-				continue
-
-			new_cost = current_cost + matrice[current_city][next_city]
-			if new_cost >= best_cost[0]:
-				continue
-
-			visited[next_city] = True
-			route.append(next_city)
-			backtrack(next_city, new_cost)
-			route.pop()
-			visited[next_city] = False
-
-	backtrack(0, 0)
-	return best_route, int(best_cost[0])
+	route, cost, _, _ = rezolva_tsp_backtracking_extins(n, matrice, mod="toate")
+	return route, cost

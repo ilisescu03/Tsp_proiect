@@ -20,8 +20,10 @@ try:
 except Exception:
 	_HAS_SEABORN = False
 
-from .backtracking import rezolva_tsp_backtracking
+from .backtracking import rezolva_tsp_backtracking, rezolva_tsp_backtracking_extins
 from .hill_climbing_tsp import rezolva_tsp_hc
+from .nearest_neighbor import rezolva_tsp_nn, rezolva_tsp_nn_multistart
+from .nn_aima import rezolva_tsp_nn_aima, rezolva_tsp_nn_aima_multistart
 
 
 Matrix = List[List[int]]
@@ -133,6 +135,112 @@ def ruleaza_experiment(
 
 	if max_n_bt_sub_prag is not None:
 		fig.suptitle(f"Prag backtracking {bt_time_limit_s:.0f}s: max N = {max_n_bt_sub_prag}")
+
+	fig.tight_layout()
+	out_path = Path(output_png)
+	fig.savefig(out_path, dpi=200)
+	plt.close(fig)
+	return out_path
+
+
+def ruleaza_experiment_lab4(
+	output_png: str | Path = "comparare_performanta_lab4.png",
+	seed: int = 42,
+	timp_nn_s: float = 1.0,
+) -> Path:
+	"""Ruleaza experimentul comparativ cerut in Lab #04.
+
+	Grafic minim (cerinta): compara timpii de executie pentru 4 valori ale lui N
+	(5, 8, 10, 12) pentru:
+		- cazul a) prima solutie / un singur start
+		- cazul c) Y solutii / multistart cu Y=N
+
+	Include 3 implementari pe acelasi grafic:
+		- backtracking (modurile prima / y_solutii)
+		- nearest neighbor manual
+		- nearest neighbor "aima" (wrapper; poate face fallback)
+
+	Args:
+		output_png: Calea fisierului PNG.
+		seed: Seed pentru generarea instantelor.
+		timp_nn_s: Rezervat pentru extensii (NN timp), pastrat pentru compatibilitate CLI.
+
+	Returns:
+		Path catre imaginea PNG generata.
+	"""
+	valori_n = [5, 8, 10, 12]
+	valori_n_nn_extra = [15, 20, 30, 50]
+
+	bt_prima: List[float] = []
+	bt_y: List[float] = []
+	nn_prima: List[float] = []
+	nn_y: List[float] = []
+	aima_prima: List[float] = []
+	aima_y: List[float] = []
+
+	for n in valori_n:
+		matrix = genereaza_instanta_tsp(n, random.Random(seed + n))
+
+		d, _ = _time_call(rezolva_tsp_backtracking_extins, n, matrix, mod="prima")
+		bt_prima.append(d)
+		d, _ = _time_call(rezolva_tsp_backtracking_extins, n, matrix, mod="y_solutii", y_max=n)
+		bt_y.append(d)
+
+		d, _ = _time_call(rezolva_tsp_nn, n, matrix, 0)
+		nn_prima.append(d)
+		d, _ = _time_call(rezolva_tsp_nn_multistart, n, matrix)
+		nn_y.append(d)
+
+		d, _ = _time_call(rezolva_tsp_nn_aima, n, matrix, 0)
+		aima_prima.append(d)
+		d, _ = _time_call(rezolva_tsp_nn_aima_multistart, n, matrix)
+		aima_y.append(d)
+
+	# Extra N doar pentru NN (protocol lab): il afisam doar pe graficul NN.
+	nn_prima_extra: List[float] = []
+	nn_y_extra: List[float] = []
+	aima_prima_extra: List[float] = []
+	aima_y_extra: List[float] = []
+
+	for n in valori_n_nn_extra:
+		matrix = genereaza_instanta_tsp(n, random.Random(seed + n))
+		d, _ = _time_call(rezolva_tsp_nn, n, matrix, 0)
+		nn_prima_extra.append(d)
+		d, _ = _time_call(rezolva_tsp_nn_multistart, n, matrix)
+		nn_y_extra.append(d)
+		d, _ = _time_call(rezolva_tsp_nn_aima, n, matrix, 0)
+		aima_prima_extra.append(d)
+		d, _ = _time_call(rezolva_tsp_nn_aima_multistart, n, matrix)
+		aima_y_extra.append(d)
+
+	if _HAS_SEABORN:
+		sns.set_theme()
+
+	fig, (ax_a, ax_c) = plt.subplots(1, 2, figsize=(12, 4.8))
+
+	# Caz a) prima solutie / un start
+	ax_a.plot(valori_n, bt_prima, marker="o", label="BT (prima)")
+	ax_a.plot(valori_n, nn_prima, marker="o", label="NN manual (start=0)")
+	ax_a.plot(valori_n, aima_prima, marker="o", label="NN aima (start=0)")
+	ax_a.plot(valori_n_nn_extra, nn_prima_extra, marker="x", linestyle="--", label="NN manual (extra N)")
+	ax_a.plot(valori_n_nn_extra, aima_prima_extra, marker="x", linestyle="--", label="NN aima (extra N)")
+	ax_a.set_title("Caz a) prima solutie / un start")
+	ax_a.set_xlabel("N (orase)")
+	ax_a.set_ylabel("Timp (secunde)")
+	ax_a.grid(True, which="both", alpha=0.3)
+	ax_a.legend(fontsize=8)
+
+	# Caz c) Y solutii / multistart (Y=N)
+	ax_c.plot(valori_n, bt_y, marker="o", label="BT (Y=N)")
+	ax_c.plot(valori_n, nn_y, marker="o", label="NN manual (multistart)")
+	ax_c.plot(valori_n, aima_y, marker="o", label="NN aima (multistart)")
+	ax_c.plot(valori_n_nn_extra, nn_y_extra, marker="x", linestyle="--", label="NN manual (extra N)")
+	ax_c.plot(valori_n_nn_extra, aima_y_extra, marker="x", linestyle="--", label="NN aima (extra N)")
+	ax_c.set_title("Caz c) Y solutii / multistart (Y=N)")
+	ax_c.set_xlabel("N (orase)")
+	ax_c.set_ylabel("Timp (secunde)")
+	ax_c.grid(True, which="both", alpha=0.3)
+	ax_c.legend(fontsize=8)
 
 	fig.tight_layout()
 	out_path = Path(output_png)
