@@ -17,6 +17,8 @@ from utils.io_utils import citeste_matrice, formateaza_traseu, salveaza_rezultat
 from utils.nn_aima import rezolva_tsp_nn_aima, rezolva_tsp_nn_aima_multistart
 from utils.nearest_neighbor import rezolva_tsp_nn, rezolva_tsp_nn_multistart, rezolva_tsp_nn_timp
 from utils.performance import ruleaza_experiment, ruleaza_experiment_lab4
+from utils.simulated_annealing_tsp import SimulatedAnnealingTSP
+from utils.sa_visualizations import run_lab8_bundle
 
 
 def _cmd_solve(args: argparse.Namespace) -> int:
@@ -71,6 +73,19 @@ def _cmd_solve(args: argparse.Namespace) -> int:
 			algo_name = "nn_aima(multistart)"
 		else:
 			raise SystemExit("Pentru nn_aima sunt suportate: prima, y_solutii.")
+	elif args.algo == "sa":
+		sa = SimulatedAnnealingTSP(
+			matrix,  # type: ignore[arg-type]
+			t_max=args.tmax,
+			t_min=args.tmin,
+			alpha=args.alpha,
+			iterations_per_temp=args.iters_per_temp,
+			seed=args.seed,
+			fix_start=True,
+		)
+		res = sa.solve(init=args.init, start_city=args.start, max_steps=args.max_steps)
+		route, cost = res.best_tour, res.best_cost
+		algo_name = f"simulated_annealing(init={args.init})"
 	else:
 		raise SystemExit("Algoritm necunoscut")
 	duration = time.perf_counter() - start
@@ -87,9 +102,28 @@ def _cmd_solve(args: argparse.Namespace) -> int:
 			print(f"Rulari NN: {stats['rulari']}")
 
 	if args.output:
-		salveaza_rezultat(args.output, route, cost, duration, algo_name)
+		# salveaza_rezultat e tipat pe int, dar accepta si float.
+		salveaza_rezultat(args.output, route, int(cost) if isinstance(cost, float) and cost.is_integer() else cost, duration, algo_name)  # type: ignore[arg-type]
 		print(f"Rezultat salvat in: {args.output}")
 
+	return 0
+
+
+def _cmd_lab8(args: argparse.Namespace) -> int:
+	outdir = Path(args.outdir)
+	artifacts = run_lab8_bundle(
+		n=args.n,
+		seed=args.seed,
+		outdir=outdir,
+		t_max=args.tmax,
+		t_min=args.tmin,
+		alpha=args.alpha,
+		iterations_per_temp=args.iters_per_temp,
+		sim_steps=args.sim_steps,
+	)
+	print(f"Lab8: grafice generate in: {outdir.resolve()}")
+	for p in artifacts:
+		print(f"- {p.resolve()}")
 	return 0
 
 
@@ -124,9 +158,9 @@ def build_parser() -> argparse.ArgumentParser:
 		"--algo",
 		"--algoritm",
 		dest="algo",
-		choices=["bt", "hc", "nn", "nn_aima"],
+		choices=["bt", "hc", "nn", "nn_aima", "sa"],
 		default="bt",
-		help="Algoritm: bt/hc (Lab3) sau nn/nn_aima (Lab4)",
+		help="Algoritm: bt/hc (Lab3), nn/nn_aima (Lab4), sa (Lab8)",
 	)
 	p_solve.add_argument(
 		"--mod",
@@ -140,6 +174,13 @@ def build_parser() -> argparse.ArgumentParser:
 	p_solve.add_argument("--restarts", type=int, default=30, help="Reporniri (doar pentru hc)")
 	p_solve.add_argument("--iterations", type=int, default=2000, help="Iteratii per repornire (doar pentru hc)")
 	p_solve.add_argument("--seed", type=int, default=42, help="Seed pentru hc/experiment")
+	# Parametri SA (Lab8)
+	p_solve.add_argument("--init", choices=["nn", "random"], default="nn", help="Stare initiala (doar pentru sa)")
+	p_solve.add_argument("--tmax", type=float, default=10000.0, help="Temperatura initiala (doar pentru sa)")
+	p_solve.add_argument("--tmin", type=float, default=1.0, help="Temperatura minima (doar pentru sa)")
+	p_solve.add_argument("--alpha", type=float, default=0.995, help="Rata de racire (doar pentru sa)")
+	p_solve.add_argument("--iters-per-temp", type=int, default=100, help="Iteratii per temperatura (doar pentru sa)")
+	p_solve.add_argument("--max-steps", type=int, default=None, help="Limita hard pe numarul total de pasi (doar pentru sa)")
 	p_solve.add_argument("--output", help="Fisier de iesire (optional)")
 	p_solve.set_defaults(func=_cmd_solve)
 
@@ -157,6 +198,18 @@ def build_parser() -> argparse.ArgumentParser:
 	p_exp4.add_argument("--nn-time", type=float, default=1.0, help="Timp (sec) folosit in modul NN 'timp' (daca e activat in experiment)")
 	p_exp4.set_defaults(func=_cmd_experiment4)
 
+	# Lab8: Simulated Annealing + vizualizari V1-V7
+	p_lab8 = sub.add_parser("lab8", help="Genereaza vizualizarile Lab8 (V1–V7) pentru SA+TSP")
+	p_lab8.add_argument("--n", type=int, default=20, help="Numar de orase (coordonate random)")
+	p_lab8.add_argument("--seed", type=int, default=42, help="Seed reproducibil")
+	p_lab8.add_argument("--outdir", default="lab8_out", help="Folder output (PNG-uri)")
+	p_lab8.add_argument("--tmax", type=float, default=10000.0, help="Temperatura initiala (SA)")
+	p_lab8.add_argument("--tmin", type=float, default=1.0, help="Temperatura minima (SA)")
+	p_lab8.add_argument("--alpha", type=float, default=0.995, help="Rata de racire (SA)")
+	p_lab8.add_argument("--iters-per-temp", type=int, default=100, help="Iteratii per temperatura (SA)")
+	p_lab8.add_argument("--sim-steps", type=int, default=50000, help="Pasi simanneal (V6)")
+	p_lab8.set_defaults(func=_cmd_lab8)
+
 	return parser
 
 
@@ -169,7 +222,6 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
 	raise SystemExit(main())
-	raise SystemExit(main())
 
 
-""" end  """
+""" end """

@@ -72,7 +72,7 @@ python src/main.py experiment --output comparare_performanta.png
 
 ## Laborator #04 (Backtracking moduri + Nearest Neighbor)
 
-Lab #04 adaugă:
+# Lab #04 adaugă:
 
 - **Backtracking cu 4 moduri de oprire**: `prima`, `toate`, `timp`, `y_solutii`
 - **Nearest Neighbor (NN) manual**: `nn`
@@ -145,6 +145,30 @@ Generează graficul comparativ pentru cazul a) și c):
 python src/main.py experiment4 --output comparare_performanta_lab4.png
 ```
 
+# Laborator #08 (Simulated Annealing + TSP)
+
+Lab #08 adaugă:
+
+- **Simulated Annealing (Python pur)** pe matricea de distanțe (vecinătate 2-opt)
+- **Vizualizările V1–V7** cerute în laborator (generate automat)
+- **Comparație `simanneal` vs implementare proprie** (V6)
+
+### Rezolvare din fișier (SA, Python pur)
+
+```bash
+python src/main.py solve orase.txt --algo sa --init nn --tmax 10000 --tmin 1 --alpha 0.995 --iters-per-temp 100 --seed 42
+```
+
+### Generare vizualizări V1–V7
+
+Generează automat PNG-uri într-un folder (implicit `lab8_out/`):
+
+```bash
+python src/main.py lab8 --n 20 --seed 42 --outdir lab8_out
+```
+
+Notă: pentru V6 (benchmark), este necesar pachetul `simanneal`.
+
 ## Format fișier de intrare (ex. `orase.txt`)
 
 Fișierul de intrare este un text simplu:
@@ -187,4 +211,6 @@ src/
 		performance.py
 		nearest_neighbor.py
 		nn_aima.py
+		simulated_annealing_tsp.py
+		sa_visualizations.py
 ```
