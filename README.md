@@ -70,9 +70,9 @@ Rulare experiment + generare grafic:
 python src/main.py experiment --output comparare_performanta.png
 ```
 
-## Laborator #04 (Backtracking moduri + Nearest Neighbor)
+# Laborator #04 (Backtracking moduri + Nearest Neighbor)
 
-# Lab #04 adaugă:
+ Lab #04 adaugă:
 
 - **Backtracking cu 4 moduri de oprire**: `prima`, `toate`, `timp`, `y_solutii`
 - **Nearest Neighbor (NN) manual**: `nn`
