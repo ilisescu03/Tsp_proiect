@@ -127,6 +127,24 @@ def _cmd_lab8(args: argparse.Namespace) -> int:
 	return 0
 
 
+def _cmd_lab9(args: argparse.Namespace) -> int:
+	try:
+		from utils.lab9_visualizations import run_lab9
+	except ImportError as exc:
+		print("Eroare: Lab9 necesita PyGAD. Instaleaza dependintele (ex. `pip install -r requirements.txt`).")
+		raise SystemExit(2) from exc
+
+	outdir = Path(args.outdir)
+	out = run_lab9(mode=args.mode, outdir=outdir, seed=args.seed)
+	print(f"Lab9 ({args.mode}): artefacte generate in: {outdir.resolve()}")
+	for p in out.artifacts:
+		print(f"- {p.resolve()}")
+	# Afisam si cateva metrice utile
+	for k, v in out.metrics.items():
+		print(f"{k}: {v}")
+	return 0
+
+
 def _cmd_experiment(args: argparse.Namespace) -> int:
 	out = ruleaza_experiment(
 		output_png=args.output,
@@ -209,6 +227,18 @@ def build_parser() -> argparse.ArgumentParser:
 	p_lab8.add_argument("--iters-per-temp", type=int, default=100, help="Iteratii per temperatura (SA)")
 	p_lab8.add_argument("--sim-steps", type=int, default=50000, help="Pasi simanneal (V6)")
 	p_lab8.set_defaults(func=_cmd_lab8)
+
+	# Lab9: Genetic Algorithm (PyGAD) + studii
+	p_lab9 = sub.add_parser("lab9", help="Ruleaza cerintele Lab9 (GA pentru TSP) si genereaza grafice")
+	p_lab9.add_argument(
+		"--mode",
+		choices=["task1", "task2", "task3", "task4", "task5"],
+		default="task1",
+		help="Alege sarcina: task1..task5",
+	)
+	p_lab9.add_argument("--seed", type=int, default=42, help="Seed reproducibil")
+	p_lab9.add_argument("--outdir", default="lab9_out", help="Folder output (PNG/TSV)")
+	p_lab9.set_defaults(func=_cmd_lab9)
 
 	return parser
 

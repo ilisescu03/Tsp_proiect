@@ -169,6 +169,48 @@ python src/main.py lab8 --n 20 --seed 42 --outdir lab8_out
 
 Notă: pentru V6 (benchmark), este necesar pachetul `simanneal`.
 
+# Laborator #09 (Algoritmi genetici + TSP)
+
+Lab #09 adaugă o rezolvare TSP folosind **algoritmi genetici** cu biblioteca **PyGAD**:
+
+- Reprezentare: permutare a orașelor
+- Fitness: `fitness = -distanta_totală`
+- Crossover: **OX (Order Crossover)**
+- Mutație: **swap mutation**
+- Studii de parametri (task1–task5) + grafice/rapoarte salvate
+
+### Rulare task-uri Lab9
+
+Task 1 (rulare primară + rută + convergență):
+
+```bash
+python src/main.py lab9 --mode task1 --outdir lab9_out --seed 42
+```
+
+Task 2 (studiu mărime populație):
+
+```bash
+python src/main.py lab9 --mode task2 --outdir lab9_out --seed 42
+```
+
+Task 3 (studiu rată mutație):
+
+```bash
+python src/main.py lab9 --mode task3 --outdir lab9_out --seed 42
+```
+
+Task 4 (studiu selecție părinți):
+
+```bash
+python src/main.py lab9 --mode task4 --outdir lab9_out --seed 42
+```
+
+Task 5 (scalabilitate pe N={15,20,25} orase random):
+
+```bash
+python src/main.py lab9 --mode task5 --outdir lab9_out --seed 42
+```
+
 ## Format fișier de intrare (ex. `orase.txt`)
 
 Fișierul de intrare este un text simplu:
@@ -213,4 +255,6 @@ src/
 		nn_aima.py
 		simulated_annealing_tsp.py
 		sa_visualizations.py
+		genetic_algorithm_tsp.py
+		lab9_visualizations.py
 ```
