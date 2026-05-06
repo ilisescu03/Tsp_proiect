@@ -239,6 +239,64 @@ Comanda `solve` afișează:
 - timpul de execuție
 
 Comanda `experiment` salvează fișierul PNG cu două subploturi (liniar + `semilogy`).
+---
+
+## Laborator 10 (NLP) – Clasificarea textelor (20 Newsgroups)
+
+Fiecare sarcină din scriptul nlp_classification_tasks.py explorează o dimensiune specifică a fluxului de procesare NLP:
+
+Sarcina 1 (Naive Bayes): Implementează modelul de bază Multinomial Naive Bayes, utilizat frecvent în clasificarea textelor datorită eficienței sale pe date rare (sparse data).
+
+Sarcina 2 (Comparare Clasificatori): Compară performanța mai multor modele (de exemplu, Naive Bayes vs. Linear SVM) pentru a vedea care arhitectură separă mai bine categoriile de știri.
+
+Sarcina 3 (N-gram Range): Studiază cum influențează contextul (bigrame sau trigrame) acuratețea, trecând de la simple cuvinte izolate la secvențe de cuvinte.
+
+Sarcina 4 (Max Features): Analizează compromisul dintre dimensiunea vocabularului și performanță, limitând numărul de cuvinte cheie păstrate de vectorizator.
+
+Sarcina 5 (Grid Search): Realizează o căutare exhaustivă prin combinarea diferitelor intervale de n-grame și limite de trăsături pentru a identifica configurația optimă.
+
+- `src/utils/nlp_classification_tasks.py`
+
+### Instalare dependențe (dacă nu sunt deja)
+
+```bash
+pip install -r requirements.txt
+```
+
+> Scriptul folosește `scikit-learn`.
+
+### Rulare: o singură sarcină (cu flag-uri)
+
+Rulare Sarcina 1 (Naive Bayes):
+```bat
+python src\utils\nlp_classification_tasks.py --task 1
+```
+
+Rulare Sarcina 2 (comparare clasificatori):
+```bat
+python src\utils\nlp_classification_tasks.py --task 2
+```
+
+Rulare Sarcina 3 (ngram_range):
+```bat
+python src\utils\nlp_classification_tasks.py --task 3
+```
+
+Rulare Sarcina 4 (max_features):
+```bat
+python src\utils\nlp_classification_tasks.py --task 4
+```
+
+Rulare Sarcina 5 (grid ngram × max_features):
+```bat
+python src\utils\nlp_classification_tasks.py --task 5
+```
+
+### Opțional: fără grafice (pentru backend/chatbot)
+
+```bat
+python src\utils\nlp_classification_tasks.py --task 1 --no-plots
+```
 
 ## Structura proiectului
 
@@ -257,4 +315,6 @@ src/
 		sa_visualizations.py
 		genetic_algorithm_tsp.py
 		lab9_visualizations.py
+		nlp_classification_tasks.py
+		nlp_classification.py
 ```
