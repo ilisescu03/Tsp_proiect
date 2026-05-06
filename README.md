@@ -241,7 +241,7 @@ Comanda `solve` afișează:
 Comanda `experiment` salvează fișierul PNG cu două subploturi (liniar + `semilogy`).
 ---
 
-## Laborator 10 (NLP) – Clasificarea textelor (20 Newsgroups)
+# Laborator 10 (NLP) – Clasificarea textelor (20 Newsgroups)
 
 Fiecare sarcină din scriptul nlp_classification_tasks.py explorează o dimensiune specifică a fluxului de procesare NLP:
 
