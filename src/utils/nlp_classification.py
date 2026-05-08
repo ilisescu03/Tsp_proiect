@@ -22,6 +22,8 @@ import time
 from dataclasses import dataclass
 
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from sklearn.datasets import fetch_20newsgroups
