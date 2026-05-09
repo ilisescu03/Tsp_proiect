@@ -1,1 +1,1 @@
-web: gunicorn --chdir src api:app --bind 0.0.0.0:$PORT --timeout 120
+web: gunicorn --chdir src api:app --bind 0.0.0.0:$PORT --timeout 300 --max-requests 1 --workers 1
