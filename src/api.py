@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from main import _cmd_solve, _cmd_experiment
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
 
 
 @app.route('/api/solve', methods=['POST'])
